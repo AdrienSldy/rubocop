@@ -971,4 +971,55 @@ RSpec.describe RuboCop::Cop::Layout::AlignHash, :config do
   it 'register no offense for yield without args' do
     expect_no_offenses('yield')
   end
+
+  context 'with mixed keys' do
+    context 'with mixed alignment configuration' do
+      let(:cop_config) do
+        {
+          'EnforcedHashRocketStyle' => 'key',
+          'EnforcedColonStyle' => 'table'
+        }
+      end
+
+      it 'registers an offense for misaligned hash values' do
+        expect_offense(<<~RUBY)
+          {
+            Authorization:  'Bearer <token>',
+            'Content-Type' => 'application/json',
+            Accept:      'application/json'
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Align the elements of a hash literal if they span more than one line.
+          }
+        RUBY
+      end
+
+      it 'does not register an offense' do
+        expect_no_offenses(<<~RUBY)
+          {
+            Authorization:  'Bearer <token>',
+            'Content-Type' => 'application/json',
+            Accept:         'application/json'
+          }
+        RUBY
+      end
+    end
+
+    context 'with table alignment configuration' do
+      let(:cop_config) do
+        {
+          'EnforcedHashRocketStyle' => 'table',
+          'EnforcedColonStyle' => 'table'
+        }
+      end
+
+      it 'does not register an offense' do
+        expect_no_offenses(<<~RUBY)
+          {
+            Authorization:    'Bearer <token>',
+            'Content-Type' => 'application/json',
+            Accept:           'application/json'
+          }
+        RUBY
+      end
+    end
+  end
 end

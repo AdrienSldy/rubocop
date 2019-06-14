@@ -225,6 +225,7 @@ module RuboCop
         end
 
         def check_pairs(node)
+          binding.pry
           first_pair = node.pairs.first
           self.offences_by = {}
           self.column_deltas = Hash.new { |hash, key| hash[key] = {} }
