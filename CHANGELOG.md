@@ -10,6 +10,7 @@
 * [#7119](https://github.com/rubocop-hq/rubocop/pull/7119): Fix cache with non UTF-8 offense message. ([@pocke][])
 * [#7118](https://github.com/rubocop-hq/rubocop/pull/7118): Fix `Style/WordArray` with `encoding: binary` magic comment and non-ASCII string. ([@pocke][])
 * [#7113](https://github.com/rubocop-hq/rubocop/pull/7113): This PR renames `EnforcedStyle: rails` to `EnabledStyle: outdented_access_modifiers` for `Layout/IndentationConsistency`. ([@koic][])
+* [#7144](https://github.com/rubocop-hq/rubocop/issues/7144): Fix `Style/Documentation` constant visibility declaration in namespace. ([@AdrienSldy][])
 
 ### Changes
 

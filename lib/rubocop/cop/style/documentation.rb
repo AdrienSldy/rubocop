@@ -3,10 +3,11 @@
 module RuboCop
   module Cop
     module Style
-      # This cop checks for missing top-level documentation of
-      # classes and modules. Classes with no body are exempt from the
-      # check and so are namespace modules - modules that have nothing in
-      # their bodies except classes, other modules, or constant definitions.
+      # This cop checks for missing top-level documentation of classes and
+      # modules. Classes with no body are exempt from the check and so are
+      # namespace modules - modules that have nothing in their bodies except
+      # classes, other modules, constant definitions or constant visibility
+      # declarations.
       #
       # The documentation requirement is annulled if the class or module has
       # a "#:nodoc:" comment next to it. Likewise, "#:nodoc: all" does the
@@ -31,6 +32,9 @@ module RuboCop
 
         def_node_matcher :constant_definition?, '{class module casgn}'
         def_node_search :outer_module, '(const (const nil? _) _)'
+        def_node_matcher :constant_visibility_declaration?, <<-PATTERN
+          (send nil? {:public_constant :private_constant} ({sym str} _))
+        PATTERN
 
         def on_class(node)
           return unless node.body
@@ -59,10 +63,14 @@ module RuboCop
           return false unless node
 
           if node.begin_type?
-            node.children.all? { |child| constant_definition?(child) }
+            node.children.all?(&method(:constant_declaration?))
           else
             constant_definition?(node)
           end
+        end
+
+        def constant_declaration?(node)
+          constant_definition?(node) || constant_visibility_declaration?(node)
         end
 
         def compact_namespace?(node)
