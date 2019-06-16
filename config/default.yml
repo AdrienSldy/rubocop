@@ -2535,6 +2535,8 @@ Style/Documentation:
   Description: 'Document classes and non-namespace modules.'
   Enabled: true
   VersionAdded: '0.9'
+  VersionChanged: '0.72'
+  RequireForPrivateObjects: false
   Exclude:
     - 'spec/**/*'
     - 'test/**/*'

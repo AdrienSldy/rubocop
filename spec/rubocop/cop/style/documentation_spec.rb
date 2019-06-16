@@ -6,6 +6,9 @@ RSpec.describe RuboCop::Cop::Style::Documentation do
   let(:config) do
     RuboCop::Config.new('Style/CommentAnnotation' => {
                           'Keywords' => %w[TODO FIXME OPTIMIZE HACK REVIEW]
+                        },
+                        'Style/Documentation' => {
+                          'RequireForPrivateObjects' => false
                         })
   end
 
@@ -382,4 +385,98 @@ RSpec.describe RuboCop::Cop::Style::Documentation do
       end
     end
   end
+
+  context 'with private objects ignored', focus: true do
+    it 'does not register an offense for non-empty class', skip: true do
+      expect_no_offenses(<<~RUBY)
+        # module NameSpace
+          class Brother
+            def method
+            end
+          end
+          class Private
+            def method
+            end
+          end
+
+          private_constant 'Brother', :Private
+        # end
+      RUBY
+    end
+
+    it 'does not register an offense for non-empty class', skip: true do
+      expect_no_offenses(<<~RUBY)
+        module NameSpace
+          class Private
+            def method
+            end
+          end
+          private_constant :Private
+        end
+      RUBY
+    end
+
+    context 'with private declaration in ancestors' do
+      it 'does not register an offense for non-empty class' do
+        expect_no_offenses(<<~RUBY)
+        module NameSpace
+          module NestedNamespace
+            class Private
+              def method
+              end
+            end
+          end
+        end
+        private_constant :'Namespace::NestedNamespace::Private'
+        RUBY
+      end
+    end
+
+    context 'with cousins declaration', skip: true do
+      it 'does not register an offense for only private content' do
+        expect_offense(<<~RUBY)
+        module NameSpace
+          class Private
+          ^^^^^ Missing top-level class documentation comment.
+            def method
+            end
+          end
+          module NestedCousins
+            class Private
+            end
+            private_constant :Private
+          end
+        end
+        RUBY
+      end
+    end
+  end
+
+  # context 'without RequireForPrivateObjects', focus: true do
+  #   it 'does not register an offense for non-empty class' do
+  #     expect_no_offenses(<<~RUBY)
+  #       module NameSpace
+  #         class Private
+  #         ^^^^^ Missing top-level class documentation comment.
+  #           def method
+  #           end
+  #         end
+  #         # private_constant :Private
+  #       end
+  #     RUBY
+  #   end
+  #
+  #   it 'does not register an offense for only private content' do
+  #     expect_no_offenses(<<~RUBY)
+  #       module NameSpace
+  #       ^^^^^^ Missing top-level module documentation comment.
+  #         class Private
+  #           def method
+  #           end
+  #         end
+  #         # private_constant :Private
+  #       end
+  #     RUBY
+  #   end
+  # end
 end

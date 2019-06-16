@@ -36,6 +36,10 @@ module RuboCop
           (send nil? {:public_constant :private_constant} ({sym str} _))
         PATTERN
 
+        def_node_search :private_constants, <<~PATTERN
+          (send nil? :private_constant ({sym str} $_)+)
+        PATTERN
+
         def on_class(node)
           return unless node.body
 
@@ -50,6 +54,7 @@ module RuboCop
 
         def check(node, body, type)
           return if namespace?(body)
+          return if private_constant?(node) && !require_for_private_objects?
           return if documentation_comment?(node) || nodoc_comment?(node)
           return if compact_namespace?(node) &&
                     nodoc_comment?(outer_module(node).first)
@@ -71,6 +76,17 @@ module RuboCop
 
         def constant_declaration?(node)
           constant_definition?(node) || constant_visibility_declaration?(node)
+        end
+
+        def private_constant?(node)
+          return unless node.parent
+
+          private_constants(node.parent).to_a.flatten.map(&:to_s) \
+            .include? node.defined_module_name
+        end
+
+        def require_for_private_objects?
+          cop_config.fetch('RequireForPrivateObjects', false)
         end
 
         def compact_namespace?(node)
