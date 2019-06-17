@@ -40,6 +40,14 @@ module RuboCop
           (send nil? :private_constant ({sym str} $_)+)
         PATTERN
 
+        def_node_matcher :private_constant_declaration?, <<~PATTERN
+          (send nil? :private_constant ({sym str} %1)+)
+        PATTERN
+
+        def_node_matcher :constant_definitions, <<~PATTERN
+          ({class module casgn} (const nil? $_))
+        PATTERN
+
         def on_class(node)
           return unless node.body
 
@@ -57,7 +65,7 @@ module RuboCop
           return if private_constant?(node) && !require_for_private_objects?
           return if documentation_comment?(node) || nodoc_comment?(node)
           return if compact_namespace?(node) &&
-                    nodoc_comment?(outer_module(node).first)
+            nodoc_comment?(outer_module(node).first)
 
           add_offense(node,
                       location: :keyword,
@@ -79,10 +87,41 @@ module RuboCop
         end
 
         def private_constant?(node)
-          return unless node.parent
+          # return unless node.parent
 
-          private_constants(node.parent).to_a.flatten.map(&:to_s) \
-            .include? node.defined_module_name
+          # binding.irb
+
+          # types = %i[begin class module casgn]
+
+          compute_name = node.defined_module_name
+
+          node.each_ancestor.any? do |ancestor|
+            unless ancestor.begin_type?
+              compute_name = "#{ancestor.defined_module_name}::#{compute_name}"
+            end
+
+            # child_name = nil
+            #
+            # ancestor.each_node(:send, :class, :module, :casgn) do |child|
+            #   if child.begin_type?
+            #
+            #   else
+            #     child_name = if child_name
+            #                    "#{child_name}::#{constant_definitions(child)}"
+            #                  else
+            #                    constant_definitions(child)
+            #                  end
+            #   end
+            #   unless child.begin_type?
+            #     child_name = "#{child_name}::#{child.defined_module_name}"
+            #   end
+            # end
+            private_constants(ancestor).to_a.flatten.map(&:to_s) \
+                                       .include? compute_name
+          end
+
+          # private_constants(node.parent).to_a.flatten.map(&:to_s) \
+          #   .include? node.defined_module_name
         end
 
         def require_for_private_objects?
