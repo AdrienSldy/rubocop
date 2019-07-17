@@ -432,7 +432,7 @@ RSpec.describe RuboCop::Cop::Style::Documentation do
       end
     end
 
-    context 'with cousins declaration', skip: true do
+    context 'with cousins declaration' do
       it 'does not register an offense for only private content' do
         expect_offense(<<~RUBY)
         module NameSpace
